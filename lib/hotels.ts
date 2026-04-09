@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { ZodError } from 'zod';
-import { sortHotelsByTier } from './hyatt-data';
+import { sortHotelsByTier } from './waldorf-astoria-data';
 import { getPrismaClient } from './prisma';
 import type { HotelDraft, HotelRecord, RoomEntry, StayEntry } from './types';
 import { hotelFormSchema, hotelReorderSchema } from './validation';
@@ -36,7 +36,7 @@ function toHotelRecord(hotel: {
         })
         .map((entry) => ({
           label: entry.label,
-          kind: entry.kind,
+          kind: 'ROOM' as const,
           imageUrl: typeof (entry as unknown as Record<string, unknown>).imageUrl === 'string'
             ? ((entry as unknown as Record<string, unknown>).imageUrl as string)
             : '',

@@ -19,7 +19,7 @@ export type StayEntry = {
   withKelly: boolean;
 };
 
-export type HyattBrand = {
+export type HotelBrand = {
   name: string;
   color: string;
   segment: string;

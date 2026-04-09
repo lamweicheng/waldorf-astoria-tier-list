@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Hyatt Tier List',
-  description: 'Curate your own Hyatt tier list across the full brand portfolio.'
+  title: 'Waldorf Astoria Tier List',
+  description: 'Curate your own Waldorf Astoria tier list with a blue-and-silver dashboard.'
 };
 
 export default function RootLayout({

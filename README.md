@@ -1,10 +1,10 @@
-# Hyatt Tier List
+# Waldorf Astoria Tier List
 
-Rank Hyatt hotels across five tiers: S, A, B, C, and D. The app ships with a curated 38-brand Hyatt portfolio, assigns each brand its own color, and supports add/edit flows from a single modal.
+Rank Waldorf Astoria hotels across five tiers: S, A, B, C, and D. The app is focused on the Waldorf Astoria brand within Hilton, uses a blue-and-silver palette, and supports add/edit flows from a single modal.
 
 ## What is in the app
 
-- A redesigned homepage with a luxury-inspired Hyatt-style UI.
+- A redesigned homepage with a Waldorf Astoria-inspired blue-and-silver UI.
 - Tier rows that update immediately when a hotel is added or edited.
 - A shared modal for both create and edit actions.
 - Local-first persistence when no database is configured.

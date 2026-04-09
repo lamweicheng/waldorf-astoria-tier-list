@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { FormEvent, startTransition, useEffect, useMemo, useRef, useState } from 'react';
-import { BRAND_BY_NAME, BRANDS_BY_SEGMENT, HYATT_BRANDS, TIERS, sortHotelsByTier } from '@/lib/hyatt-data';
+import { BRAND_BY_NAME, BRANDS_BY_SEGMENT, HOTEL_BRANDS, TIERS, sortHotelsByTier } from '@/lib/waldorf-astoria-data';
 import { FancySelect } from '@/components/ui/fancy-select';
 import { DashboardMenuModal, type DashboardMenuSection } from '@/components/DashboardMenuModal';
 import type {
@@ -34,11 +34,21 @@ const TOP_EXPERIENCES_STORAGE_KEY = 'waldorf-astoria-tier-list.top-experiences';
 const TOP_UNDERRATED_STORAGE_KEY = 'waldorf-astoria-tier-list.top-underrated';
 const TOP_RETURN_STAYS_STORAGE_KEY = 'waldorf-astoria-tier-list.top-return-stays';
 const DISPLAY_PREFERENCES_STORAGE_KEY = 'waldorf-astoria-tier-list.display-preferences';
+const LEGACY_LOCAL_STORAGE_KEYS = {
+  hotels: ['hyatt-tier-list.hotels'],
+  topPicks: ['hyatt-tier-list.top-picks'],
+  topSuites: ['hyatt-tier-list.top-suites'],
+  topFutureStays: ['hyatt-tier-list.top-future-stays'],
+  topExperiences: ['hyatt-tier-list.top-experiences'],
+  topUnderrated: ['hyatt-tier-list.top-underrated'],
+  topReturnStays: ['hyatt-tier-list.top-return-stays'],
+  displayPreferences: ['hyatt-tier-list.display-preferences']
+} as const;
 const ALL_BUCKET_LIST_BRANDS = '__ALL_BUCKET_LIST_BRANDS__';
 
 const DEFAULT_DRAFT: HotelDraft = {
   name: '',
-  brand: HYATT_BRANDS[0].name,
+  brand: HOTEL_BRANDS[0].name,
   stayType: 'EXPLORED',
   tier: 'S',
   roomEntries: [],
@@ -391,7 +401,7 @@ function normalizeHotelRecord(value: unknown): HotelRecord {
     brand:
       typeof raw.brand === 'string' && BRAND_BY_NAME[raw.brand]
         ? raw.brand
-        : HYATT_BRANDS[0].name,
+        : HOTEL_BRANDS[0].name,
     stayType,
     tier,
     roomEntries: normalizeRoomEntries(raw.roomEntries),
@@ -552,6 +562,26 @@ function countSuites(hotels: HotelRecord[]) {
 
 function formatRoomEntries(entries: RoomEntry[]) {
   return entries.map((entry) => entry.label).join(', ');
+}
+
+function getLocalStorageValueWithMigration(primaryKey: string, legacyKeys: readonly string[]) {
+  const currentValue = window.localStorage.getItem(primaryKey);
+
+  if (currentValue !== null) {
+    return currentValue;
+  }
+
+  for (const legacyKey of legacyKeys) {
+    const legacyValue = window.localStorage.getItem(legacyKey);
+
+    if (legacyValue !== null) {
+      window.localStorage.setItem(primaryKey, legacyValue);
+      window.localStorage.removeItem(legacyKey);
+      return legacyValue;
+    }
+  }
+
+  return null;
 }
 
 function normalizeTopPickSlots(value: unknown): TopPickSlot[] {
@@ -928,7 +958,7 @@ export function WaldorfAstoriaTierListClient({
     setIsHydrated(true);
 
     if (persistenceMode === 'local') {
-      const storedHotels = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+      const storedHotels = getLocalStorageValueWithMigration(LOCAL_STORAGE_KEY, LEGACY_LOCAL_STORAGE_KEYS.hotels);
 
       if (storedHotels) {
         try {
@@ -941,7 +971,7 @@ export function WaldorfAstoriaTierListClient({
     }
 
     if (persistenceMode === 'local') {
-      const storedTopPicks = window.localStorage.getItem(TOP_PICKS_STORAGE_KEY);
+      const storedTopPicks = getLocalStorageValueWithMigration(TOP_PICKS_STORAGE_KEY, LEGACY_LOCAL_STORAGE_KEYS.topPicks);
 
       if (storedTopPicks) {
         try {
@@ -954,7 +984,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopSuites = window.localStorage.getItem(TOP_SUITES_STORAGE_KEY);
+      const storedTopSuites = getLocalStorageValueWithMigration(TOP_SUITES_STORAGE_KEY, LEGACY_LOCAL_STORAGE_KEYS.topSuites);
 
       if (storedTopSuites) {
         try {
@@ -967,7 +997,10 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopFutureStays = window.localStorage.getItem(TOP_FUTURE_STAYS_STORAGE_KEY);
+      const storedTopFutureStays = getLocalStorageValueWithMigration(
+        TOP_FUTURE_STAYS_STORAGE_KEY,
+        LEGACY_LOCAL_STORAGE_KEYS.topFutureStays
+      );
 
       if (storedTopFutureStays) {
         try {
@@ -980,7 +1013,10 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopExperiences = window.localStorage.getItem(TOP_EXPERIENCES_STORAGE_KEY);
+      const storedTopExperiences = getLocalStorageValueWithMigration(
+        TOP_EXPERIENCES_STORAGE_KEY,
+        LEGACY_LOCAL_STORAGE_KEYS.topExperiences
+      );
 
       if (storedTopExperiences) {
         try {
@@ -993,7 +1029,10 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopUnderrated = window.localStorage.getItem(TOP_UNDERRATED_STORAGE_KEY);
+      const storedTopUnderrated = getLocalStorageValueWithMigration(
+        TOP_UNDERRATED_STORAGE_KEY,
+        LEGACY_LOCAL_STORAGE_KEYS.topUnderrated
+      );
 
       if (storedTopUnderrated) {
         try {
@@ -1006,7 +1045,10 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopReturnStays = window.localStorage.getItem(TOP_RETURN_STAYS_STORAGE_KEY);
+      const storedTopReturnStays = getLocalStorageValueWithMigration(
+        TOP_RETURN_STAYS_STORAGE_KEY,
+        LEGACY_LOCAL_STORAGE_KEYS.topReturnStays
+      );
 
       if (storedTopReturnStays) {
         try {
@@ -1019,7 +1061,10 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedDisplayPreferences = window.localStorage.getItem(DISPLAY_PREFERENCES_STORAGE_KEY);
+      const storedDisplayPreferences = getLocalStorageValueWithMigration(
+        DISPLAY_PREFERENCES_STORAGE_KEY,
+        LEGACY_LOCAL_STORAGE_KEYS.displayPreferences
+      );
 
       if (storedDisplayPreferences) {
         try {
@@ -1110,7 +1155,7 @@ export function WaldorfAstoriaTierListClient({
   const bucketListBrandOptions = useMemo(() => {
     const bucketListBrandNames = new Set(bucketListHotels.map((hotel) => hotel.brand));
 
-    return HYATT_BRANDS.filter((brand) => bucketListBrandNames.has(brand.name)).map((brand) => ({
+    return HOTEL_BRANDS.filter((brand) => bucketListBrandNames.has(brand.name)).map((brand) => ({
       value: brand.name,
       label: brand.name,
       color: brand.color
@@ -1136,7 +1181,7 @@ export function WaldorfAstoriaTierListClient({
 
   const exploredSuiteCount = useMemo(() => countSuites(exploredHotels), [exploredHotels]);
   const mappedBrands = useMemo(
-    () => HYATT_BRANDS.filter((brand) => exploredHotels.some((hotel) => hotel.brand === brand.name)),
+    () => HOTEL_BRANDS.filter((brand) => exploredHotels.some((hotel) => hotel.brand === brand.name)),
     [exploredHotels]
   );
   const selectedBrand = useMemo(
@@ -1145,7 +1190,7 @@ export function WaldorfAstoriaTierListClient({
   );
   const exploredBrandNames = useMemo(() => new Set(exploredHotels.map((hotel) => hotel.brand)), [exploredHotels]);
   const futureExploringBrands = useMemo(
-    () => HYATT_BRANDS.filter((brand) => futureHotels.some((hotel) => hotel.brand === brand.name) && !exploredBrandNames.has(brand.name)),
+    () => HOTEL_BRANDS.filter((brand) => futureHotels.some((hotel) => hotel.brand === brand.name) && !exploredBrandNames.has(brand.name)),
     [exploredBrandNames, futureHotels]
   );
   useEffect(() => {

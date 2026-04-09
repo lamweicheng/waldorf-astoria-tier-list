@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { HYATT_BRANDS, TIERS } from './hyatt-data';
+import { HOTEL_BRANDS, TIERS } from './waldorf-astoria-data';
 
-const BRAND_NAMES = HYATT_BRANDS.map((brand) => brand.name) as [string, ...string[]];
+const BRAND_NAMES = HOTEL_BRANDS.map((brand) => brand.name) as [string, ...string[]];
 const STAY_TYPES = ['EXPLORED', 'FUTURE', 'BUCKET_LIST'] as const;
 const ROOM_ENTRY_KINDS = ['ROOM', 'SUITE'] as const;
 
@@ -24,7 +24,7 @@ export const hotelFormSchema = z
   .object({
     name: z.string().trim().min(1, 'Hotel name is required').max(120, 'Max 120 characters'),
     brand: z.enum(BRAND_NAMES, {
-      errorMap: () => ({ message: 'Choose a Hyatt brand' })
+      errorMap: () => ({ message: 'Choose Waldorf Astoria' })
     }),
     stayType: z.enum(STAY_TYPES),
     tier: z.enum(TIERS).nullable(),
@@ -70,10 +70,10 @@ export const hotelFormSchema = z
     ...value,
     roomEntries: value.roomEntries.map((entry) => ({
       label: entry.label.trim(),
-      kind: entry.kind,
-      imageUrl: entry.kind === 'SUITE' ? entry.imageUrl.trim() : '',
-      stars: entry.kind === 'SUITE' ? entry.stars : null,
-      withKelly: entry.kind === 'SUITE' ? entry.withKelly : false
+      kind: 'ROOM' as const,
+      imageUrl: entry.imageUrl.trim(),
+      stars: entry.stars,
+      withKelly: entry.withKelly
     })),
     stayEntries: value.stayEntries.map((entry) => ({
       id: entry.id?.trim() || crypto.randomUUID(),

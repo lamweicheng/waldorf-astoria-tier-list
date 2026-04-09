@@ -1,4 +1,4 @@
-import { HyattTierListClient } from './HyattTierListClient';
+import { WaldorfAstoriaTierListClient } from './WaldorfAstoriaTierListClient';
 import { listDashboardPreferences } from '@/lib/dashboard-preferences';
 import { isDatabaseConfigured, listHotels } from '@/lib/hotels';
 
@@ -11,7 +11,7 @@ export default async function Page() {
   ]);
 
   return (
-    <HyattTierListClient
+    <WaldorfAstoriaTierListClient
       initialHotels={initialHotels}
       initialDashboardPreferences={initialDashboardPreferences}
       persistenceMode={isDatabaseConfigured() ? 'database' : 'local'}

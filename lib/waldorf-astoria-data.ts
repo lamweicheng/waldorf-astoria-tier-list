@@ -4,17 +4,17 @@ export const TIERS = ['S', 'A', 'B', 'C', 'D'] as const;
 
 export const BRAND_SEGMENTS = ['Hilton Luxury'] as const;
 
-export const HYATT_BRANDS: HotelBrand[] = [
+export const HOTEL_BRANDS: HotelBrand[] = [
   { name: 'Waldorf Astoria', color: '#123a63', segment: 'Hilton Luxury' }
 ];
 
 export const BRAND_BY_NAME = Object.fromEntries(
-  HYATT_BRANDS.map((brand) => [brand.name, brand])
+  HOTEL_BRANDS.map((brand) => [brand.name, brand])
 ) as Record<string, HotelBrand>;
 
 export const BRANDS_BY_SEGMENT = BRAND_SEGMENTS.map((segment) => ({
   segment,
-  brands: HYATT_BRANDS.filter((brand) => brand.segment === segment)
+  brands: HOTEL_BRANDS.filter((brand) => brand.segment === segment)
 }));
 
 const TIER_WEIGHT: Record<Tier, number> = {
