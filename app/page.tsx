@@ -1,20 +1,21 @@
 import { WaldorfAstoriaTierListClient } from './WaldorfAstoriaTierListClient';
-import { listDashboardPreferences } from '@/lib/dashboard-preferences';
-import { isDatabaseConfigured, listHotels } from '@/lib/hotels';
+import { DEFAULT_DASHBOARD_PREFERENCES, listDashboardPreferences } from '@/lib/dashboard-preferences';
+import { isDatabaseReady, listHotels } from '@/lib/hotels';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const [initialHotels, initialDashboardPreferences] = await Promise.all([
-    listHotels(),
-    listDashboardPreferences()
-  ]);
+  const databaseReady = await isDatabaseReady();
+
+  const [initialHotels, initialDashboardPreferences] = databaseReady
+    ? await Promise.all([listHotels(), listDashboardPreferences()])
+    : [[], DEFAULT_DASHBOARD_PREFERENCES];
 
   return (
     <WaldorfAstoriaTierListClient
       initialHotels={initialHotels}
       initialDashboardPreferences={initialDashboardPreferences}
-      persistenceMode={isDatabaseConfigured() ? 'database' : 'local'}
+      persistenceMode={databaseReady ? 'database' : 'local'}
     />
   );
 }

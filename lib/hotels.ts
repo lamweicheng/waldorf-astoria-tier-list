@@ -10,6 +10,39 @@ export function isDatabaseConfigured() {
   return Boolean(process.env.DATABASE_URL);
 }
 
+export function isMissingHotelStorage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.message.includes('Hotel') ||
+    error.message.includes('hotel') ||
+    error.message.includes('does not exist') ||
+    error.message.includes('no such table') ||
+    error.message.includes('relation')
+  );
+}
+
+export async function isDatabaseReady() {
+  if (!isDatabaseConfigured()) {
+    return false;
+  }
+
+  try {
+    await getPrismaClient().hotel.findFirst({
+      select: { id: true }
+    });
+    return true;
+  } catch (error) {
+    if (isMissingHotelStorage(error)) {
+      return false;
+    }
+
+    return false;
+  }
+}
+
 function toHotelRecord(hotel: {
   id: string;
   name: string;
@@ -113,10 +146,18 @@ export async function listHotels() {
     return [] as HotelRecord[];
   }
 
-  const hotels = await getPrismaClient().hotel.findMany({
-    orderBy: [{ stayType: 'asc' }, { tier: 'asc' }, { position: 'asc' }, { name: 'asc' }]
-  });
-  return sortHotelsByTier(hotels.map(toHotelRecord));
+  try {
+    const hotels = await getPrismaClient().hotel.findMany({
+      orderBy: [{ stayType: 'asc' }, { tier: 'asc' }, { position: 'asc' }, { name: 'asc' }]
+    });
+    return sortHotelsByTier(hotels.map(toHotelRecord));
+  } catch (error) {
+    if (isMissingHotelStorage(error)) {
+      return [] as HotelRecord[];
+    }
+
+    throw error;
+  }
 }
 
 export async function createHotel(payload: HotelDraft) {
