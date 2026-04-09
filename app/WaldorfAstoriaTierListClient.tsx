@@ -34,16 +34,6 @@ const TOP_EXPERIENCES_STORAGE_KEY = 'waldorf-astoria-tier-list.top-experiences';
 const TOP_UNDERRATED_STORAGE_KEY = 'waldorf-astoria-tier-list.top-underrated';
 const TOP_RETURN_STAYS_STORAGE_KEY = 'waldorf-astoria-tier-list.top-return-stays';
 const DISPLAY_PREFERENCES_STORAGE_KEY = 'waldorf-astoria-tier-list.display-preferences';
-const LEGACY_LOCAL_STORAGE_KEYS = {
-  hotels: ['hyatt-tier-list.hotels'],
-  topPicks: ['hyatt-tier-list.top-picks'],
-  topSuites: ['hyatt-tier-list.top-suites'],
-  topFutureStays: ['hyatt-tier-list.top-future-stays'],
-  topExperiences: ['hyatt-tier-list.top-experiences'],
-  topUnderrated: ['hyatt-tier-list.top-underrated'],
-  topReturnStays: ['hyatt-tier-list.top-return-stays'],
-  displayPreferences: ['hyatt-tier-list.display-preferences']
-} as const;
 const ALL_BUCKET_LIST_BRANDS = '__ALL_BUCKET_LIST_BRANDS__';
 
 const DEFAULT_DRAFT: HotelDraft = {
@@ -556,32 +546,8 @@ function resolveDropTargetFromPointer(
   };
 }
 
-function countSuites(hotels: HotelRecord[]) {
-  return hotels.reduce((total, hotel) => total + hotel.roomEntries.length, 0);
-}
-
 function formatRoomEntries(entries: RoomEntry[]) {
   return entries.map((entry) => entry.label).join(', ');
-}
-
-function getLocalStorageValueWithMigration(primaryKey: string, legacyKeys: readonly string[]) {
-  const currentValue = window.localStorage.getItem(primaryKey);
-
-  if (currentValue !== null) {
-    return currentValue;
-  }
-
-  for (const legacyKey of legacyKeys) {
-    const legacyValue = window.localStorage.getItem(legacyKey);
-
-    if (legacyValue !== null) {
-      window.localStorage.setItem(primaryKey, legacyValue);
-      window.localStorage.removeItem(legacyKey);
-      return legacyValue;
-    }
-  }
-
-  return null;
 }
 
 function normalizeTopPickSlots(value: unknown): TopPickSlot[] {
@@ -958,7 +924,7 @@ export function WaldorfAstoriaTierListClient({
     setIsHydrated(true);
 
     if (persistenceMode === 'local') {
-      const storedHotels = getLocalStorageValueWithMigration(LOCAL_STORAGE_KEY, LEGACY_LOCAL_STORAGE_KEYS.hotels);
+      const storedHotels = window.localStorage.getItem(LOCAL_STORAGE_KEY);
 
       if (storedHotels) {
         try {
@@ -971,7 +937,7 @@ export function WaldorfAstoriaTierListClient({
     }
 
     if (persistenceMode === 'local') {
-      const storedTopPicks = getLocalStorageValueWithMigration(TOP_PICKS_STORAGE_KEY, LEGACY_LOCAL_STORAGE_KEYS.topPicks);
+      const storedTopPicks = window.localStorage.getItem(TOP_PICKS_STORAGE_KEY);
 
       if (storedTopPicks) {
         try {
@@ -984,7 +950,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopSuites = getLocalStorageValueWithMigration(TOP_SUITES_STORAGE_KEY, LEGACY_LOCAL_STORAGE_KEYS.topSuites);
+      const storedTopSuites = window.localStorage.getItem(TOP_SUITES_STORAGE_KEY);
 
       if (storedTopSuites) {
         try {
@@ -997,10 +963,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopFutureStays = getLocalStorageValueWithMigration(
-        TOP_FUTURE_STAYS_STORAGE_KEY,
-        LEGACY_LOCAL_STORAGE_KEYS.topFutureStays
-      );
+      const storedTopFutureStays = window.localStorage.getItem(TOP_FUTURE_STAYS_STORAGE_KEY);
 
       if (storedTopFutureStays) {
         try {
@@ -1013,10 +976,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopExperiences = getLocalStorageValueWithMigration(
-        TOP_EXPERIENCES_STORAGE_KEY,
-        LEGACY_LOCAL_STORAGE_KEYS.topExperiences
-      );
+      const storedTopExperiences = window.localStorage.getItem(TOP_EXPERIENCES_STORAGE_KEY);
 
       if (storedTopExperiences) {
         try {
@@ -1029,10 +989,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopUnderrated = getLocalStorageValueWithMigration(
-        TOP_UNDERRATED_STORAGE_KEY,
-        LEGACY_LOCAL_STORAGE_KEYS.topUnderrated
-      );
+      const storedTopUnderrated = window.localStorage.getItem(TOP_UNDERRATED_STORAGE_KEY);
 
       if (storedTopUnderrated) {
         try {
@@ -1045,10 +1002,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedTopReturnStays = getLocalStorageValueWithMigration(
-        TOP_RETURN_STAYS_STORAGE_KEY,
-        LEGACY_LOCAL_STORAGE_KEYS.topReturnStays
-      );
+      const storedTopReturnStays = window.localStorage.getItem(TOP_RETURN_STAYS_STORAGE_KEY);
 
       if (storedTopReturnStays) {
         try {
@@ -1061,10 +1015,7 @@ export function WaldorfAstoriaTierListClient({
         }
       }
 
-      const storedDisplayPreferences = getLocalStorageValueWithMigration(
-        DISPLAY_PREFERENCES_STORAGE_KEY,
-        LEGACY_LOCAL_STORAGE_KEYS.displayPreferences
-      );
+      const storedDisplayPreferences = window.localStorage.getItem(DISPLAY_PREFERENCES_STORAGE_KEY);
 
       if (storedDisplayPreferences) {
         try {
@@ -1179,7 +1130,6 @@ export function WaldorfAstoriaTierListClient({
     );
   }, [exploredHotels]);
 
-  const exploredSuiteCount = useMemo(() => countSuites(exploredHotels), [exploredHotels]);
   const mappedBrands = useMemo(
     () => HOTEL_BRANDS.filter((brand) => exploredHotels.some((hotel) => hotel.brand === brand.name)),
     [exploredHotels]
@@ -1465,7 +1415,7 @@ export function WaldorfAstoriaTierListClient({
         .sort((left, right) => left.rank - right.rank),
     [exploredHotels, topPicks]
   );
-  const hasCompleteTopPicks = topPicksResolved.length === 3 && topPicks.every((slot) => slot.hotelId);
+  const hasTopPicks = topPicksResolved.length > 0;
   const topSuitesResolved = useMemo(
     () =>
       topSuites
@@ -1478,8 +1428,7 @@ export function WaldorfAstoriaTierListClient({
         .sort((left, right) => left.rank - right.rank),
     [exploredHotelsWithSuites, topSuites]
   );
-  const hasCompleteTopSuites =
-    topSuitesResolved.length === 3 && topSuites.every((slot) => slot.hotelId && slot.suiteName.trim());
+  const hasTopSuites = topSuitesResolved.length > 0;
   const topFutureStaysResolved = useMemo(
     () =>
       topFutureStays
@@ -1492,8 +1441,7 @@ export function WaldorfAstoriaTierListClient({
         .sort((left, right) => left.rank - right.rank),
     [futureHotels, topFutureStays]
   );
-  const hasCompleteTopFutureStays =
-    topFutureStaysResolved.length === 3 && topFutureStays.every((slot) => slot.hotelId && slot.location.trim());
+  const hasTopFutureStays = topFutureStaysResolved.length > 0;
   const topExperiencesResolved = useMemo(
     () =>
       topExperiences
@@ -1506,8 +1454,7 @@ export function WaldorfAstoriaTierListClient({
         .sort((left, right) => left.rank - right.rank),
     [exploredHotels, topExperiences]
   );
-  const hasCompleteTopExperiences =
-    topExperiencesResolved.length === 3 && topExperiences.every((slot) => slot.hotelId && slot.description.trim());
+  const hasTopExperiences = topExperiencesResolved.length > 0;
   const topUnderratedResolved = useMemo(
     () =>
       topUnderrated
@@ -1519,7 +1466,7 @@ export function WaldorfAstoriaTierListClient({
         .sort((left, right) => left.rank - right.rank),
     [exploredHotels, topUnderrated]
   );
-  const hasCompleteTopUnderrated = topUnderratedResolved.length === 3 && topUnderrated.every((slot) => slot.hotelId);
+  const hasTopUnderrated = topUnderratedResolved.length > 0;
   const topReturnStaysResolved = useMemo(
     () =>
       topReturnStays
@@ -1531,12 +1478,12 @@ export function WaldorfAstoriaTierListClient({
         .sort((left, right) => left.rank - right.rank),
     [exploredHotels, topReturnStays]
   );
-  const hasCompleteTopReturnStays = topReturnStaysResolved.length === 3 && topReturnStays.every((slot) => slot.hotelId);
+  const hasTopReturnStays = topReturnStaysResolved.length > 0;
   const topOverviewSections = useMemo<TopOverviewSection[]>(
     () => [
       {
         id: 'top-hotels',
-        label: 'Top 3 Hotels',
+        label: 'Top 3 Waldorf Astoria',
         title: 'Best Overall',
         emptyMessage: 'No hotel podium picks yet.',
         items: topPicksResolved.flatMap((slot) =>
@@ -1547,25 +1494,6 @@ export function WaldorfAstoriaTierListClient({
                   hotel: slot.hotel,
                   imageUrl: slot.imageUrl,
                   title: slot.hotel.name
-                }
-              ]
-            : []
-        )
-      },
-      {
-        id: 'top-suites',
-        label: 'Top 3 Room Types',
-        title: 'Favorite Room Types',
-        emptyMessage: 'No room-highlight podium picks yet.',
-        items: topSuitesResolved.flatMap((slot) =>
-          slot.hotel
-            ? [
-                {
-                  rank: slot.rank,
-                  hotel: slot.hotel,
-                  imageUrl: slot.imageUrl,
-                  title: slot.hotel.name,
-                  imageLabel: slot.suiteName || undefined
                 }
               ]
             : []
@@ -1649,7 +1577,6 @@ export function WaldorfAstoriaTierListClient({
       topFutureStaysResolved,
       topPicksResolved,
       topReturnStaysResolved,
-      topSuitesResolved,
       topUnderratedResolved
     ]
   );
@@ -1682,34 +1609,21 @@ export function WaldorfAstoriaTierListClient({
       .map(([year, stays]) => ({ year, stays }));
   }, [exploredHotels]);
   const summaryCards = [
-    { label: 'Hotels Explored', value: exploredHotels.length },
-    { label: 'Brand Focus', value: 'Waldorf Astoria' },
-    { label: 'Room Types Logged', value: exploredSuiteCount },
-    { label: 'Planned Hotel Explorations', value: futureHotels.length },
-    { label: 'Bucket List Hotels', value: bucketListHotels.length }
+    { label: 'Waldorf Astoria Explored', value: exploredHotels.length },
+    { label: 'Planned Waldorf Astoria', value: futureHotels.length },
+    { label: 'Bucket List Waldorf Astoria', value: bucketListHotels.length }
   ];
 
   const menuSections: DashboardMenuSection[] = [
     {
       id: 'topHotels' as const,
-      label: 'Top 3 Hotels',
+      label: 'Top 3 Waldorf Astoria',
       description: 'Show or hide your hotel podium.',
       shown: displayPreferences.showTopHotels,
       toggle: () =>
         void updateDisplayPreferences({
           ...displayPreferences,
           showTopHotels: !displayPreferences.showTopHotels
-        })
-    },
-    {
-      id: 'topSuites' as const,
-      label: 'Top 3 Room Types',
-      description: 'Show or hide your favorite room highlights.',
-      shown: displayPreferences.showTopSuites,
-      toggle: () =>
-        void updateDisplayPreferences({
-          ...displayPreferences,
-          showTopSuites: !displayPreferences.showTopSuites
         })
     },
     {
@@ -1731,7 +1645,7 @@ export function WaldorfAstoriaTierListClient({
     },
     {
       id: 'futureHotels' as const,
-      label: 'Planned Hotel Explorations',
+      label: 'Planned Waldorf Astoria',
       description: 'Show or hide your future stays board.',
       shown: displayPreferences.showFutureHotels,
       toggle: () =>
@@ -1758,19 +1672,8 @@ export function WaldorfAstoriaTierListClient({
         })
     },
     {
-      id: 'suiteSlideshow' as const,
-      label: 'Room Highlights',
-      description: 'Show or hide your logged room-type gallery.',
-      shown: displayPreferences.showSuiteSlideshow,
-      toggle: () =>
-        void updateDisplayPreferences({
-          ...displayPreferences,
-          showSuiteSlideshow: !displayPreferences.showSuiteSlideshow
-        })
-    },
-    {
       id: 'bucketListSlideshow' as const,
-      label: 'My Waldorf Astoria Bucket List',
+      label: 'My Bucket List of Waldorf Astoria Hotels',
       description: 'Show or hide your bucket-list hotel carousel.',
       shown: displayPreferences.showBucketListSlideshow,
       toggle: () =>
@@ -1914,10 +1817,6 @@ export function WaldorfAstoriaTierListClient({
     setTopPicksDraft(topPicks);
     setTopPicksError(null);
     setIsTopPicksOpen(true);
-  }
-
-  function scrollToSuiteExplorations() {
-    suiteExplorationsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function scrollToTierBoard() {
@@ -2231,7 +2130,7 @@ export function WaldorfAstoriaTierListClient({
       brand: hotel.brand,
       stayType: hotel.stayType,
       tier: hotel.tier,
-      roomEntries: hotel.roomEntries.length ? hotel.roomEntries : [],
+      roomEntries: [],
       stayEntries: hotel.stayEntries.length ? hotel.stayEntries : [],
       bucketListLocation: hotel.bucketListLocation,
       bucketListImageUrl: hotel.bucketListImageUrl
@@ -2404,22 +2303,12 @@ export function WaldorfAstoriaTierListClient({
   }
 
   function buildPayloadFromDraft(): HotelDraft {
-    const cleanedRoomEntries = draft.roomEntries
-      .map((entry) => ({
-        label: entry.label.trim(),
-        kind: 'ROOM' as const,
-        imageUrl: entry.imageUrl.trim(),
-        stars: entry.stars,
-        withKelly: entry.withKelly
-      }))
-      .filter((entry) => entry.label);
-
     return {
       name: draft.name.trim(),
       brand: draft.brand,
       stayType: draft.stayType,
       tier: draft.stayType === 'EXPLORED' ? draft.tier ?? 'S' : null,
-      roomEntries: draft.stayType === 'BUCKET_LIST' ? [] : cleanedRoomEntries,
+      roomEntries: [],
       stayEntries: draft.stayType !== 'BUCKET_LIST'
         ? draft.stayEntries
         .map((entry) => ({
@@ -2587,18 +2476,10 @@ export function WaldorfAstoriaTierListClient({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsAllBrandsOpen(true)}
-                  className="inline-flex items-center justify-center rounded-full border border-[rgba(0,102,179,0.18)] bg-white/82 px-5 py-3 text-sm font-semibold text-[rgb(var(--wine))] shadow-[0_12px_24px_rgba(26,74,122,0.08)] transition hover:-translate-y-0.5 hover:bg-[rgba(0,102,179,0.06)]"
-                  aria-label="Open brand palette"
-                >
-                  Brand Palette
-                </button>
-                <button
-                  type="button"
                   onClick={openCreateModal}
                   className="inline-flex items-center justify-center rounded-full bg-[rgb(var(--wine))] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(26,74,122,0.22)] transition hover:-translate-y-0.5 hover:bg-[#004f8d]"
                 >
-                  Add hotel
+                  Add Waldorf Astoria
                 </button>
               </div>
             </div>
@@ -2607,7 +2488,7 @@ export function WaldorfAstoriaTierListClient({
                 {summaryCards.map((card) => (
                   <div key={card.label} className="soft-ring rounded-[20px] bg-white/82 p-3 sm:rounded-[24px] sm:p-4">
                     <div className="text-[0.62rem] uppercase tracking-[0.14em] text-[rgba(34,58,86,0.52)] sm:text-[0.72rem] sm:tracking-[0.16em]">
-                      {card.label === 'Hotels Explored' ? (
+                      {card.label === 'Waldorf Astoria Explored' ? (
                         <button
                           type="button"
                           onClick={scrollToTierBoard}
@@ -2615,7 +2496,7 @@ export function WaldorfAstoriaTierListClient({
                         >
                           {card.label}
                         </button>
-                      ) : card.label === 'Planned Hotel Explorations' ? (
+                      ) : card.label === 'Planned Waldorf Astoria' ? (
                         <button
                           type="button"
                           onClick={scrollToFutureHotels}
@@ -2623,15 +2504,7 @@ export function WaldorfAstoriaTierListClient({
                         >
                           {card.label}
                         </button>
-                      ) : card.label === 'Room Types Logged' ? (
-                        <button
-                          type="button"
-                          onClick={scrollToSuiteExplorations}
-                          className="block w-full text-left align-top text-[0.62rem] uppercase tracking-[0.14em] text-[rgba(34,58,86,0.52)] transition hover:text-[rgb(var(--wine))] sm:text-[0.72rem] sm:tracking-[0.16em]"
-                        >
-                          {card.label}
-                        </button>
-                      ) : card.label === 'Bucket List Hotels' ? (
+                      ) : card.label === 'Bucket List Waldorf Astoria' ? (
                         <button
                           type="button"
                           onClick={() => bucketListSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -2661,7 +2534,7 @@ export function WaldorfAstoriaTierListClient({
                 onClick={openTopPicksModal}
                 className="section-label transition hover:text-[rgb(var(--wine))]"
               >
-                Top 3 Hotels
+                Top 3 Waldorf Astoria
               </button>
               <h2 className="mt-2 text-2xl font-semibold text-[rgb(var(--page-foreground))] font-[family:var(--font-display)] sm:text-3xl">
                 My Personal Podium
@@ -2669,7 +2542,7 @@ export function WaldorfAstoriaTierListClient({
             </div>
           </div>
 
-          {hasCompleteTopPicks ? (
+          {hasTopPicks ? (
             <div className="mt-5 grid gap-4 lg:grid-cols-3">
               {topPicksResolved.map((slot) => {
                 const hotel = slot.hotel;
@@ -2717,13 +2590,13 @@ export function WaldorfAstoriaTierListClient({
             </div>
           ) : (
             <div className="mt-5 rounded-[22px] border border-dashed border-[rgba(0,102,179,0.16)] bg-white/58 p-5 text-sm text-[rgba(34,58,86,0.62)]">
-              Click Top 3 Hotels to set up your personal podium.
+              Click Top 3 Waldorf Astoria to set up your personal podium.
             </div>
           )}
         </section>
         ) : null}
 
-        {displayPreferences.showTopSuites ? (
+        {false ? (
         <section className="glass-panel rounded-[28px] px-4 py-4 sm:px-5 sm:py-5" style={{ order: getSectionOrder('topSuites') }}>
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -2740,7 +2613,7 @@ export function WaldorfAstoriaTierListClient({
             </div>
           </div>
 
-          {hasCompleteTopSuites ? (
+          {hasTopSuites ? (
             <div className="mt-5 grid gap-4 lg:grid-cols-3">
               {topSuitesResolved.map((slot) => {
                 const hotel = slot.hotel;
@@ -2934,14 +2807,6 @@ export function WaldorfAstoriaTierListClient({
 
                                 {!isCompactMode ? (
                                   <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
-                                    {hotel.roomEntries.length > 0 ? (
-                                      <span
-                                        className="inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full border border-[rgba(34,58,86,0.12)] bg-[rgba(34,58,86,0.08)] px-1 text-[0.55rem] font-semibold leading-none text-[rgba(34,58,86,0.72)]"
-                                        aria-label={`${hotel.roomEntries.length} logged room${hotel.roomEntries.length === 1 ? '' : 's'}`}
-                                      >
-                                        {hotel.roomEntries.length}
-                                      </span>
-                                    ) : null}
                                     <span
                                       className="h-4.5 w-4.5 rounded-full border border-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
                                       style={{ backgroundColor: brandStyle.dotColor }}
@@ -2961,6 +2826,7 @@ export function WaldorfAstoriaTierListClient({
               })}
             </div>
 
+            {false ? (
             <aside className="tier-shell rounded-[24px] bg-white/74 p-4">
               <button
                 type="button"
@@ -3000,6 +2866,7 @@ export function WaldorfAstoriaTierListClient({
                 )}
               </div>
             </aside>
+            ) : null}
 
           </div>
         </section>
@@ -3013,11 +2880,11 @@ export function WaldorfAstoriaTierListClient({
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="section-label">Planned Hotel Explorations</p>
+              <p className="section-label">Planned Waldorf Astoria</p>
             </div>
             {!isCompactMode ? (
               <div className="rounded-full border border-white/80 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[rgba(34,58,86,0.58)]">
-                {futureHotels.length} planned hotel exploration{futureHotels.length === 1 ? '' : 's'}
+                {futureHotels.length} planned stay{futureHotels.length === 1 ? '' : 's'}
               </div>
             ) : null}
           </div>
@@ -3076,14 +2943,6 @@ export function WaldorfAstoriaTierListClient({
                         </div>
                         {!isCompactMode ? (
                           <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
-                            {hotel.roomEntries.length > 0 ? (
-                              <span
-                                className="inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full border border-[rgba(34,58,86,0.12)] bg-[rgba(34,58,86,0.08)] px-1 text-[0.55rem] font-semibold leading-none text-[rgba(34,58,86,0.72)]"
-                                aria-label={`${hotel.roomEntries.length} logged room${hotel.roomEntries.length === 1 ? '' : 's'}`}
-                              >
-                                {hotel.roomEntries.length}
-                              </span>
-                            ) : null}
                             <span
                               className="h-4.5 w-4.5 rounded-full border border-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
                               style={{ backgroundColor: brandStyle.dotColor }}
@@ -3097,7 +2956,7 @@ export function WaldorfAstoriaTierListClient({
                 })
               ) : (
                 <div className="rounded-[18px] border border-dashed border-[rgba(0,102,179,0.16)] bg-white/55 p-4 text-sm text-[rgba(34,58,86,0.58)]">
-                  No planned hotel explorations yet.
+                  No planned Waldorf Astoria stays yet.
                 </div>
               )}
             </div>
@@ -3197,7 +3056,7 @@ export function WaldorfAstoriaTierListClient({
         </section>
         ) : null}
 
-        {displayPreferences.showSuiteSlideshow ? (
+        {false ? (
         <section
           ref={suiteExplorationsSectionRef}
           className="glass-panel rounded-[28px] px-4 py-4 sm:px-5 sm:py-5"
@@ -3297,12 +3156,12 @@ export function WaldorfAstoriaTierListClient({
                         type="button"
                         onClick={showPreviousSuiteSlide}
                         className="group relative hidden h-[300px] w-[190px] shrink-0 overflow-hidden rounded-[26px] border border-white/10 shadow-[0_22px_40px_rgba(0,0,0,0.28)] transition hover:-translate-x-1 hover:border-white/18 sm:block md:h-[430px] md:w-[280px] lg:h-[520px] lg:w-[320px] xl:-ml-14"
-                        aria-label={`Preview previous room highlight: ${previousSuiteSlide.suiteName}`}
+                        aria-label={`Preview previous room highlight: ${previousSuiteSlide!.suiteName}`}
                       >
-                        {previousSuiteSlide.imageUrl ? (
+                        {previousSuiteSlide!.imageUrl ? (
                           <UserPhoto
-                            src={previousSuiteSlide.imageUrl}
-                            alt={`${previousSuiteSlide.hotel.name} ${previousSuiteSlide.suiteName}`}
+                            src={previousSuiteSlide!.imageUrl}
+                            alt={`${previousSuiteSlide!.hotel.name} ${previousSuiteSlide!.suiteName}`}
                             className="absolute inset-0 h-full w-full object-cover grayscale-[0.18] opacity-70 transition group-hover:opacity-82"
                           />
                         ) : (
@@ -3355,12 +3214,12 @@ export function WaldorfAstoriaTierListClient({
                         type="button"
                         onClick={showNextSuiteSlide}
                         className="group relative hidden h-[300px] w-[190px] shrink-0 overflow-hidden rounded-[26px] border border-white/10 shadow-[0_22px_40px_rgba(0,0,0,0.28)] transition hover:translate-x-1 hover:border-white/18 sm:block md:h-[430px] md:w-[280px] lg:h-[520px] lg:w-[320px] xl:-mr-14"
-                        aria-label={`Preview next room highlight: ${nextSuiteSlide.suiteName}`}
+                        aria-label={`Preview next room highlight: ${nextSuiteSlide!.suiteName}`}
                       >
-                        {nextSuiteSlide.imageUrl ? (
+                        {nextSuiteSlide!.imageUrl ? (
                           <UserPhoto
-                            src={nextSuiteSlide.imageUrl}
-                            alt={`${nextSuiteSlide.hotel.name} ${nextSuiteSlide.suiteName}`}
+                            src={nextSuiteSlide!.imageUrl}
+                            alt={`${nextSuiteSlide!.hotel.name} ${nextSuiteSlide!.suiteName}`}
                             className="absolute inset-0 h-full w-full object-cover grayscale-[0.18] opacity-70 transition group-hover:opacity-82"
                           />
                         ) : (
@@ -3576,13 +3435,14 @@ export function WaldorfAstoriaTierListClient({
                   className="rounded-[24px] border border-white/50 bg-[rgba(255,255,255,0.82)] p-4 text-left shadow-[0_18px_40px_rgba(26,74,122,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_48px_rgba(26,74,122,0.16)]"
                 >
                   <div className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[rgba(34,58,86,0.54)]">
-                    Hotels Explored Together
+                    Waldorf Astoria Explored Together
                   </div>
                   <div className="mt-3 text-3xl font-semibold text-[rgb(var(--page-foreground))] sm:text-4xl">
                     {kellyExplorationHotels.length}
                   </div>
                 </button>
 
+                {false ? (
                 <article className="rounded-[24px] border border-white/50 bg-[rgba(255,255,255,0.82)] p-4 shadow-[0_18px_40px_rgba(26,74,122,0.12)]">
                   <div className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[rgba(34,58,86,0.54)]">
                     Room Types Logged Together
@@ -3591,7 +3451,9 @@ export function WaldorfAstoriaTierListClient({
                     {kellySuiteCount}
                   </div>
                 </article>
+                ) : null}
 
+                {false ? (
                 <button
                   type="button"
                   onClick={() => setIsKellyBrandsOpen(true)}
@@ -3604,9 +3466,10 @@ export function WaldorfAstoriaTierListClient({
                     {kellyExploredBrandNames.size}
                   </div>
                 </button>
+                ) : null}
               </div>
 
-              {activeKellySuiteSlide ? (
+              {false ? (
                 <article className="overflow-hidden rounded-[32px] border border-white/8 bg-[#0a121b] shadow-[0_28px_80px_rgba(8,25,43,0.28)]">
                   <div className="relative min-h-[480px] bg-[#0a121b] sm:min-h-[720px]">
                     {activeKellySuiteSlide.imageUrl ? (
@@ -3650,12 +3513,12 @@ export function WaldorfAstoriaTierListClient({
                           type="button"
                           onClick={showPreviousKellySuiteSlide}
                           className="group relative hidden h-[300px] w-[190px] shrink-0 overflow-hidden rounded-[26px] border border-white/10 shadow-[0_22px_40px_rgba(0,0,0,0.28)] transition hover:-translate-x-1 hover:border-white/18 sm:block md:h-[430px] md:w-[280px] lg:h-[520px] lg:w-[320px] xl:-ml-14"
-                          aria-label={`Preview previous Kelly suite: ${previousKellySuiteSlide.suiteName}`}
+                          aria-label={`Preview previous Kelly suite: ${previousKellySuiteSlide!.suiteName}`}
                         >
-                          {previousKellySuiteSlide.imageUrl ? (
+                          {previousKellySuiteSlide!.imageUrl ? (
                             <UserPhoto
-                              src={previousKellySuiteSlide.imageUrl}
-                              alt={`${previousKellySuiteSlide.hotel.name} ${previousKellySuiteSlide.suiteName}`}
+                              src={previousKellySuiteSlide!.imageUrl}
+                              alt={`${previousKellySuiteSlide!.hotel.name} ${previousKellySuiteSlide!.suiteName}`}
                               className="absolute inset-0 h-full w-full object-cover grayscale-[0.18] opacity-70 transition group-hover:opacity-82"
                             />
                           ) : (
@@ -3702,12 +3565,12 @@ export function WaldorfAstoriaTierListClient({
                           type="button"
                           onClick={showNextKellySuiteSlide}
                           className="group relative hidden h-[300px] w-[190px] shrink-0 overflow-hidden rounded-[26px] border border-white/10 shadow-[0_22px_40px_rgba(0,0,0,0.28)] transition hover:translate-x-1 hover:border-white/18 sm:block md:h-[430px] md:w-[280px] lg:h-[520px] lg:w-[320px] xl:-mr-14"
-                          aria-label={`Preview next Kelly suite: ${nextKellySuiteSlide.suiteName}`}
+                          aria-label={`Preview next Kelly suite: ${nextKellySuiteSlide!.suiteName}`}
                         >
-                          {nextKellySuiteSlide.imageUrl ? (
+                          {nextKellySuiteSlide!.imageUrl ? (
                             <UserPhoto
-                              src={nextKellySuiteSlide.imageUrl}
-                              alt={`${nextKellySuiteSlide.hotel.name} ${nextKellySuiteSlide.suiteName}`}
+                              src={nextKellySuiteSlide!.imageUrl}
+                              alt={`${nextKellySuiteSlide!.hotel.name} ${nextKellySuiteSlide!.suiteName}`}
                               className="absolute inset-0 h-full w-full object-cover grayscale-[0.18] opacity-70 transition group-hover:opacity-82"
                             />
                           ) : (
@@ -3732,13 +3595,13 @@ export function WaldorfAstoriaTierListClient({
                 </article>
               ) : (
                 <div className="rounded-[22px] border border-dashed border-[rgba(0,102,179,0.16)] bg-white/58 p-5 text-sm text-[rgba(34,58,86,0.62)]">
-                  Mark explored stays or room highlights with Kelly ❤️ to build this shared gallery.
+                  Open any explored Waldorf Astoria to review the stays you logged with Kelly ❤️.
                 </div>
               )}
             </div>
           ) : (
             <div className="mt-5 rounded-[22px] border border-dashed border-[rgba(0,102,179,0.16)] bg-white/58 p-5 text-sm text-[rgba(34,58,86,0.62)]">
-              Open any explored hotel and mark individual stays or room highlights with Kelly ❤️ to start building this section.
+              Open any explored Waldorf Astoria and mark individual stays with Kelly ❤️ to start building this section.
             </div>
           )}
         </section>
@@ -3761,7 +3624,7 @@ export function WaldorfAstoriaTierListClient({
             </div>
           </div>
 
-          {hasCompleteTopFutureStays ? (
+          {hasTopFutureStays ? (
             <div className="mt-5 grid gap-4 lg:grid-cols-3">
               {topFutureStaysResolved.map((slot) => {
                 const hotel = slot.hotel;
@@ -3834,7 +3697,7 @@ export function WaldorfAstoriaTierListClient({
             </div>
           </div>
 
-          {hasCompleteTopExperiences ? (
+          {hasTopExperiences ? (
             <div className="mt-5 grid gap-4 lg:grid-cols-3">
               {topExperiencesResolved.map((slot) => {
                 const hotel = slot.hotel;
@@ -3907,7 +3770,7 @@ export function WaldorfAstoriaTierListClient({
             </div>
           </div>
 
-          {hasCompleteTopUnderrated ? (
+          {hasTopUnderrated ? (
             <div className="mt-5 grid gap-4 lg:grid-cols-3">
               {topUnderratedResolved.map((slot) => {
                 const hotel = slot.hotel;
@@ -3977,7 +3840,7 @@ export function WaldorfAstoriaTierListClient({
             </div>
           </div>
 
-          {hasCompleteTopReturnStays ? (
+          {hasTopReturnStays ? (
             <div className="mt-5 grid gap-4 lg:grid-cols-3">
               {topReturnStaysResolved.map((slot) => {
                 const hotel = slot.hotel;
@@ -5380,12 +5243,12 @@ export function WaldorfAstoriaTierListClient({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label={modalState.mode === 'edit' ? 'Edit hotel stay' : 'Add hotel stay'}
+            aria-label={modalState.mode === 'edit' ? 'Edit Waldorf Astoria stay' : 'Add Waldorf Astoria stay'}
             className="glass-panel max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[30px] p-5 sm:p-7"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="section-label">{modalState.mode === 'edit' ? 'Edit Hotel' : 'Add Hotel'}</p>
+                <p className="section-label">{modalState.mode === 'edit' ? 'Edit Waldorf Astoria' : 'Add Waldorf Astoria'}</p>
                 {modalState.mode === 'edit' ? (
                   <h2 className="mt-2 text-3xl font-semibold leading-none text-[rgb(var(--page-foreground))] font-[family:var(--font-display)] sm:text-4xl">
                     Update this stay
@@ -5498,7 +5361,7 @@ export function WaldorfAstoriaTierListClient({
                   </div>
                 ) : null}
 
-                {draft.stayType !== 'BUCKET_LIST' ? (
+                {false ? (
                 <div className="space-y-3 md:col-span-2">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -5751,7 +5614,7 @@ export function WaldorfAstoriaTierListClient({
                       ? 'Saving...'
                       : modalState.mode === 'edit'
                         ? 'Save changes'
-                        : 'Add hotel'}
+                        : 'Add Waldorf Astoria'}
                   </button>
                 </div>
               </div>
