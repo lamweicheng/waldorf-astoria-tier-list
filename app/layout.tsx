@@ -3,7 +3,10 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Waldorf Astoria Tier List',
-  description: 'Curate your own Waldorf Astoria tier list with a blue-and-silver dashboard.'
+  description: 'Curate your own Waldorf Astoria tier list with a blue-and-silver dashboard.',
+  icons: {
+    icon: '/favicon.png'
+  }
 };
 
 export default function RootLayout({
